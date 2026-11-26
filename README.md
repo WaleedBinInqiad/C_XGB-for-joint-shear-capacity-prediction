@@ -1,6 +1,6 @@
 # Shear capacity of match-cast UHPC joints – human–AI design aid
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/<your-username>/<repository-name>/blob/main/run_in_colab.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/WaleedBinInqiad/uhpc-joint-design-aid/blob/main/run_in_colab.ipynb)
 
 Design aid for the shear capacity of match-cast (dry and epoxy) UHPC joints in precast segmental bridges.
 A physics-constrained XGBoost ensemble (C_XGB) predicts the shear capacity with a calibrated 95% prediction
@@ -24,8 +24,8 @@ of the notebook and stays active while the Colab session is open.
 Requires Python 3.10 or later.
 
 ```bash
-git clone https://github.com/<your-username>/<repository-name>.git
-cd <repository-name>
+git clone https://github.com/WaleedBinInqiad/uhpc-joint-design-aid.git
+cd uhpc-joint-design-aid
 pip install -r requirements.txt
 python app.py
 ```
@@ -88,6 +88,3 @@ inspection.
 If you use this design aid, please cite:
 
 [paper reference]
-
-## Licence
-See `LICENSE`.

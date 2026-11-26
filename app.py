@@ -444,6 +444,34 @@ def record(S, reviewer, decision, value, test, comment):
             gr.update(value=page_figure(S, review)))
 
 
+def predict_api(interface: str = "Dry", configuration: str = "Single", n_keys: float = 3, key_depth_mm: float = 44,
+                key_width_mm: float = 150, key_height_mm: float = 100, joint_width_mm: float = 200,
+                shear_plane_height_mm: float = 800, confining_stress_MPa: float = 14,
+                compressive_strength_MPa: float = 149, tensile_strength_MPa: float = 0,
+                fibre_content_pct: float = 2) -> dict:
+    """Shear capacity of a match-cast UHPC joint with its 95% interval and the release decision (G1-G3).
+
+    interface: "Dry" or "Epoxy"; configuration: "Single" or "Double"; n_keys: 0 for a flat joint;
+    tensile_strength_MPa: 0 to estimate it as 0.648*sqrt(fc). Nothing is written to the review log."""
+    x, jt, errors, notes = build_inputs(interface, configuration, n_keys, key_depth_mm, key_width_mm, key_height_mm,
+                                        joint_width_mm, shear_plane_height_mm, confining_stress_MPa,
+                                        compressive_strength_MPa, tensile_strength_MPa, fibre_content_pct)
+    if errors:
+        return {"error": errors}
+    res = predict(x, jt)
+    conf = confidence_within(res, TOL)
+    reasons, dist = domain_check(x)
+    if conf < REQUIRED_CONFIDENCE:
+        reasons.insert(0, f"G1: confidence {conf:.0%} < {REQUIRED_CONFIDENCE:.0%} within ±{TOL:.0%}")
+    epi_share = res["epi"] / (res["epi"] + res["ale"])
+    return {"joint_type": TYPE_NAME[jt], "predicted_capacity_kN": round(res["mu"], 1),
+            "interval_95_kN": [round(res["lo"], 1), round(res["hi"], 1)],
+            "confidence_within_20pct": round(conf, 3), "uncertainty_data_model": [round(1 - epi_share, 3),
+                                                                                round(epi_share, 3)],
+            "manual_inspection": bool(reasons), "reasons": reasons, "notes": notes,
+            "inputs": {LABEL[f]: round(float(v), 4) for f, v in zip(FEATS, x[0])}}
+
+
 # ---------------------------------------------------------------- interface ---------------------------------------
 CSS = """
 * {font-family: 'Times New Roman', Times, serif !important;}
@@ -558,10 +586,11 @@ with gr.Blocks(title="UHPC joint shear capacity – human–AI design aid", **(_
     ins = [interface, config, n_keys, key_depth, key_width, key_height, joint_width, plane_height, sigma_n, fc, ft,
            rho_f]
     outs = [shap_out, unc_out, res_out, why, state, case, btn_dl]
-    btn_run.click(run, ins, outs, api_name="assess")
+    btn_run.click(run, ins, outs, api_name=False)
     demo.load(run, ins, outs, api_name=False)
     btn_refer.click(refer_manually, state, [state, res_out, why, case, btn_dl], api_name=False)
-    btn_page.click(None, None, None, js=SNAPSHOT_JS)
+    btn_page.click(None, None, None, js=SNAPSHOT_JS, api_name=False)
+    gr.api(predict_api, api_name="predict")
     btn_rec.click(record, [state, reviewer, decision, value, test, comment], [msg, btn_dl], api_name=False)
 
 

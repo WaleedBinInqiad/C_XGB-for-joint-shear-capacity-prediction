@@ -1,0 +1,6 @@
+gradio>=5.0
+xgboost==3.4.1
+numpy
+pandas
+scipy
+matplotlib
